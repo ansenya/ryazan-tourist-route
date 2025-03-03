@@ -71,6 +71,3 @@ jobs:
           cd ../front
           docker build -t arsanoshin/ryazan-project-web .
           docker push arsanoshin/ryazan-project-web
-
-      - name: Run Docker Containers
-        run: docker-compose up -d
