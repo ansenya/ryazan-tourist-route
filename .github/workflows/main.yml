@@ -1,0 +1,76 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  lint-frontend:
+    name: Lint Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: |
+          cd front
+          npm ci
+
+      - name: Run ESLint
+        run: |
+          cd front
+          npm run lint --if-present
+
+  lint-backend:
+    name: Lint Backend (Go)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.23.0
+
+      - name: Install golangci-lint
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+      - name: Run golangci-lint
+        run: |
+          cd back
+          golangci-lint run ./...
+
+  build-docker:
+    name: Build Docker Compose
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log in to DockerHub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build and Push Docker Images
+        run: |
+          cd back
+          docker build -t arsanoshin/ryazan-project-api .
+          docker push arsanoshin/ryazan-project-api
+          
+          cd ../front
+          docker build -t arsanoshin/ryazan-project-web .
+          docker push arsanoshin/ryazan-project-web
+
+      - name: Run Docker Containers
+        run: docker-compose up -d

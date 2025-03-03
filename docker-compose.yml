@@ -1,0 +1,17 @@
+services:
+  api:
+    image: arsanoshin/ryazan-project-api
+    container_name: rtr-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data:ro
+    restart: unless-stopped
+  web:
+    image: arsanoshin/ryazan-project-web
+    container_name: rtr-web
+    ports:
+      - "80:80"
+    environment:
+      VITE_API_URL: http://localhost:8000
+    restart: unless-stopped
